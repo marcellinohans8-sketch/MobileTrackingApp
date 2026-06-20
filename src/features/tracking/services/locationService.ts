@@ -1,5 +1,5 @@
 import Geolocation from 'react-native-geolocation-service';
-
+import { sendLocation } from './socketService';
 import db from '../../../database/sqlite';
 
 export function startTracking() {
@@ -13,7 +13,17 @@ export function startTracking() {
 INSERT INTO locations
 (latitude,longitude,timestamp,synced)
 VALUES (?,?,?,?)
+sendLocation({
+
+latitude,
+
+longitude,
+
+timestamp:new Date()
+
+})
 `,
+
           [latitude, longitude, new Date().toISOString(), 0],
         );
       });
