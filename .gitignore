@@ -73,3 +73,10 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+.tmp/
+.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+node_modules/

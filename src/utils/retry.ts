@@ -1,43 +1,43 @@
-export async function retryQueue(
-fn:any,
-retry=5
-){
+type RetryOptions = {
+  retries?: number;
+  initialDelayMs?: number;
+  maxDelayMs?: number;
+  factor?: number;
+  sleep?: (delayMs: number) => Promise<void>;
+};
 
+const defaultSleep = (delayMs: number) =>
+  new Promise<void>(resolve => setTimeout(resolve, delayMs));
 
-let delay=1000;
+export async function retryQueue<T>(
+  fn: () => Promise<T>,
+  {
+    retries = 5,
+    initialDelayMs = 1000,
+    maxDelayMs = 30000,
+    factor = 2,
+    sleep = defaultSleep,
+  }: RetryOptions = {},
+) {
+  let delay = initialDelayMs;
+  let lastError: unknown;
 
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
 
+      if (attempt === retries) {
+        break;
+      }
 
-for(
-let i=0;i<retry;i++
-){
+      await sleep(delay);
+      delay = Math.min(delay * factor, maxDelayMs);
+    }
+  }
 
-
-try{
-
-return await fn();
-
-
-}catch(e){
-
-
-await new Promise(
-r=>setTimeout(r,delay)
-);
-
-
-delay*=2;
-
-
-}
-
-
-}
-
-
-throw Error(
-"Failed after retry"
-)
-
-
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Failed after retry');
 }

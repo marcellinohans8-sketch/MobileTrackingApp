@@ -1,97 +1,92 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Mobile Tracking App
 
-# Getting Started
+Aplikasi React Native untuk studi kasus mobile tracking dengan prinsip offline-first.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Fitur
 
-## Step 1: Start Metro
+- Mock login dan logout.
+- Tracking lokasi foreground setiap 10 detik.
+- Penyimpanan lokal ke SQLite.
+- Offline-first: data selalu disimpan lokal lebih dulu.
+- Auto sync saat koneksi kembali menggunakan NetInfo.
+- Integrasi Socket.IO untuk event `location:update`.
+- Halaman dashboard, riwayat lokasi, dan map.
+- Background tracking menggunakan `react-native-background-geolocation`.
+- Geofencing sederhana untuk `Office Zone`.
+- Retry queue dengan exponential backoff.
+- Unit test untuk retry queue.
+- Struktur clean architecture ringan: `domain`, `data`, `services`, dan `screens`.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
+## Menjalankan Project
 
 ```sh
-# Using npm
+npm install
 npm start
-
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## Build APK Debug
 
 ```sh
-bundle install
+cd android
+./gradlew assembleDebug
 ```
 
-Then, and every time you update your native dependencies, run:
+Output APK:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Di Windows PowerShell:
+
+```powershell
+cd android
+.\gradlew.bat assembleDebug
+```
+
+## Socket.IO Server
+
+Default endpoint ada di:
+
+```ts
+src/features/tracking/services/socketService.ts
+```
+
+Untuk emulator Android, default menggunakan `http://10.0.2.2:3000`.
+Server perlu menerima event dan mengirim ACK agar aplikasi hanya menandai data
+sebagai `synced` setelah server benar-benar menerima payload:
+
+```js
+socket.on('location:update', (payload, ack) => {
+  console.log(payload);
+  ack({ success: true });
+});
+```
+
+Payload berisi `latitude`, `longitude`, `accuracy`, `timestamp`, `source`, `geofenceStatus`, dan status sync lokal.
+Jika server membalas `{ success: false, message: '...' }` atau tidak mengirim
+ACK dalam 5 detik, data tetap pending dan akan dicoba lagi oleh retry queue.
+
+## Catatan Permission
+
+Android manifest sudah mencakup:
+
+- `ACCESS_FINE_LOCATION`
+- `ACCESS_COARSE_LOCATION`
+- `ACCESS_BACKGROUND_LOCATION`
+- `FOREGROUND_SERVICE`
+- `FOREGROUND_SERVICE_LOCATION`
+- `INTERNET`
+
+Background location di Android 10+ tetap membutuhkan approval user dari runtime permission/settings.
+
+## Test
 
 ```sh
-bundle exec pod install
+npm test
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## Dokumentasi
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+Lihat [ARCHITECTURE.md](./ARCHITECTURE.md) untuk alur data dan pembagian layer.

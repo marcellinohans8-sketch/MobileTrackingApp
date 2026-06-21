@@ -1,3 +1,11 @@
 module.exports = {
-  preset: '@react-native/jest-preset',
+  preset: undefined,
+  testEnvironment: 'node',
+  testMatch: ['**/?(*.)+(test).ts'],
+  transform: {
+    '^.+\\.tsx?$': [
+      'babel-jest',
+      { presets: ['module:@react-native/babel-preset'] },
+    ],
+  },
 };
